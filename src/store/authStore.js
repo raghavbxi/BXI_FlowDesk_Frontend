@@ -24,10 +24,10 @@ const useAuthStore = create(
   (set) => ({
       ...getInitialState(),
 
-      login: async (email, password) => {
+      login: async (email, password, otp) => {
         set({ loading: true, error: null });
         try {
-          const response = await authAPI.login({ email, password });
+          const response = await authAPI.login({ email, password, otp });
           const { token, user } = response.data;
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(user));
@@ -42,6 +42,19 @@ const useAuthStore = create(
         } catch (error) {
           const message = error.response?.data?.message || 'Login failed';
           set({ loading: false, error: message, isAuthenticated: false });
+          return { success: false, error: message };
+        }
+      },
+
+      sendOTP: async (email) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await authAPI.sendOTP(email);
+          set({ loading: false, error: null });
+          return { success: true, message: response.data.message };
+        } catch (error) {
+          const message = error.response?.data?.message || 'Failed to send OTP';
+          set({ loading: false, error: message });
           return { success: false, error: message };
         }
       },
