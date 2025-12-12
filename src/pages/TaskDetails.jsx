@@ -32,6 +32,7 @@ import EditTaskModal from '../components/EditTaskModal';
 import ProgressUpdateModal from '../components/ProgressUpdateModal';
 import ActivityTrail from '../components/ActivityTrail';
 import StepList from '../components/StepList';
+import TaskUpdatesTimeline from '../components/TaskUpdatesTimeline';
 import useTaskStore from '../store/taskStore';
 import useAuthStore from '../store/authStore';
 
@@ -210,6 +211,12 @@ const TaskDetails = () => {
                   taskCreatedBy={currentTask.createdBy?._id || currentTask.createdBy}
                   userRole={user?.role}
                 />
+              </CardContent>
+            </Card>
+
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <TaskUpdatesTimeline task={currentTask} />
               </CardContent>
             </Card>
 

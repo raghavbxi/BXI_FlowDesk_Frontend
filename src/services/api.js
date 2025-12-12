@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://bxi-flowdesk-backend.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -96,6 +96,13 @@ export const notificationsAPI = {
   markAsRead: (id) => api.put(`/notifications/${id}/read`),
   markAllAsRead: () => api.put('/notifications/read-all'),
   deleteNotification: (id) => api.delete(`/notifications/${id}`),
+};
+
+// Updates API
+export const updatesAPI = {
+  getTaskUpdates: (taskId) => api.get(`/updates/tasks/${taskId}`),
+  createTaskUpdate: (taskId, data) => api.post(`/updates/tasks/${taskId}`, data),
+  deleteTaskUpdate: (updateId) => api.delete(`/updates/${updateId}`),
 };
 
 export default api;

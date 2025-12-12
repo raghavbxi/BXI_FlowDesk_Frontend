@@ -147,7 +147,6 @@ const Calendar = () => {
                         fontWeight: 600,
                         fontSize: '0.875rem',
                         borderBottom: '1px solid',
-                        borderColor: 'divider',
                         borderRight: '1px solid',
                         borderColor: 'divider',
                       }}
