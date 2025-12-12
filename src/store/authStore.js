@@ -24,10 +24,10 @@ const useAuthStore = create(
   (set) => ({
       ...getInitialState(),
 
-      login: async (email, password, otp) => {
+      login: async (email, otp) => {
         set({ loading: true, error: null });
         try {
-          const response = await authAPI.login({ email, password, otp });
+          const response = await authAPI.login({ email, otp });
           const { token, user } = response.data;
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(user));
