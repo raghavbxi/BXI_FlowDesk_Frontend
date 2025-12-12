@@ -20,8 +20,6 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    confirmPassword: '',
   });
 
   useEffect(() => {
@@ -39,11 +37,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    const result = await register(formData.name, formData.email, formData.password);
+    const result = await register(formData.name, formData.email);
     if (result.success) {
       navigate('/dashboard');
     }
@@ -105,26 +99,6 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Confirm Password"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
                 sx={{ mb: 3 }}
               />
               <Button
@@ -138,6 +112,7 @@ const Register = () => {
                   py: 1.5,
                   fontSize: '1.0625rem',
                   fontWeight: 400,
+                  borderRadius: 0,
                 }}
               >
                 {loading ? 'Creating account...' : 'Sign Up'}
@@ -157,4 +132,3 @@ const Register = () => {
 };
 
 export default Register;
-

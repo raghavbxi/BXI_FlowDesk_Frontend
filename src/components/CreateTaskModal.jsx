@@ -46,9 +46,13 @@ const CreateTaskModal = ({ open, onClose }) => {
   const fetchUsers = async () => {
     try {
       const response = await usersAPI.getUsers();
-      setUsers(response.data.data);
+      console.log('Users API Response:', response.data);
+      const usersList = response.data?.data || response.data || [];
+      console.log('Users list:', usersList);
+      setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
@@ -117,10 +121,19 @@ const CreateTaskModal = ({ open, onClose }) => {
             <Autocomplete
               multiple
               options={users}
-              getOptionLabel={(option) => option.name || option}
+              getOptionLabel={(option) => {
+                if (typeof option === 'string') return option;
+                return `${option.name || 'Unknown'} (${option.email || ''})`;
+              }}
               value={formData.assignedUsers}
               onChange={(e, newValue) => {
                 setFormData({ ...formData, assignedUsers: newValue });
+              }}
+              isOptionEqualToValue={(option, value) => {
+                if (typeof option === 'object' && typeof value === 'object') {
+                  return option._id === value._id;
+                }
+                return option === value;
               }}
               renderInput={(params) => (
                 <TextField {...params} label="Assign Users" sx={{ mb: 2 }} />
@@ -128,9 +141,9 @@ const CreateTaskModal = ({ open, onClose }) => {
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
-                    label={option.name || option}
+                    label={typeof option === 'object' ? `${option.name || 'Unknown'} (${option.email || ''})` : option}
                     {...getTagProps({ index })}
-                    key={option._id || option}
+                    key={typeof option === 'object' ? (option._id || index) : option}
                   />
                 ))
               }

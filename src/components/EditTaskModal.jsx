@@ -39,26 +39,44 @@ const EditTaskModal = ({ open, onClose, task }) => {
 
   useEffect(() => {
     if (open && task) {
+      fetchUsers();
+    }
+  }, [open, task]);
+
+  useEffect(() => {
+    if (open && task && users.length > 0) {
       // Initialize form with task data
+      // Map assignedUsers to full user objects for Autocomplete
+      const assignedUsersObjects = (task.assignedUsers || []).map((assignedUser) => {
+        if (typeof assignedUser === 'object' && assignedUser._id) {
+          return assignedUser;
+        }
+        // If it's just an ID, find the full user object
+        return users.find((u) => u._id === assignedUser || u._id === assignedUser._id) || assignedUser;
+      }).filter(Boolean);
+
       setFormData({
         title: task.title || '',
         description: task.description || '',
-        assignedUsers: task.assignedUsers || [],
+        assignedUsers: assignedUsersObjects,
         startDate: task.startDate ? dayjs(task.startDate) : dayjs(),
         endDate: task.endDate ? dayjs(task.endDate) : dayjs().add(7, 'day'),
         status: task.status || 'not-started',
         priority: task.priority || 'medium',
       });
-      fetchUsers();
     }
-  }, [open, task]);
+  }, [open, task, users]);
 
   const fetchUsers = async () => {
     try {
       const response = await usersAPI.getUsers();
-      setUsers(response.data.data);
+      console.log('Users API Response:', response.data);
+      const usersList = response.data?.data || response.data || [];
+      console.log('Users list:', usersList);
+      setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
@@ -126,10 +144,19 @@ const EditTaskModal = ({ open, onClose, task }) => {
             <Autocomplete
               multiple
               options={users}
-              getOptionLabel={(option) => option.name || option}
+              getOptionLabel={(option) => {
+                if (typeof option === 'string') return option;
+                return `${option.name || 'Unknown'} (${option.email || ''})`;
+              }}
               value={formData.assignedUsers}
               onChange={(e, newValue) => {
                 setFormData({ ...formData, assignedUsers: newValue });
+              }}
+              isOptionEqualToValue={(option, value) => {
+                if (typeof option === 'object' && typeof value === 'object') {
+                  return option._id === value._id;
+                }
+                return option === value;
               }}
               renderInput={(params) => (
                 <TextField {...params} label="Assign Users" sx={{ mb: 2 }} />
@@ -137,9 +164,9 @@ const EditTaskModal = ({ open, onClose, task }) => {
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <Chip
-                    label={option.name || option}
+                    label={typeof option === 'object' ? `${option.name || 'Unknown'} (${option.email || ''})` : option}
                     {...getTagProps({ index })}
-                    key={option._id || option}
+                    key={typeof option === 'object' ? (option._id || index) : option}
                   />
                 ))
               }

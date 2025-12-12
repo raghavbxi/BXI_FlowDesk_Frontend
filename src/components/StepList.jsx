@@ -25,7 +25,7 @@ import {
   PlayArrow,
   Pause,
 } from '@mui/icons-material';
-import { stepsAPI } from '../services/api';
+import { stepsAPI, usersAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 import dayjs from 'dayjs';
 
@@ -53,7 +53,9 @@ const StepList = ({ taskId, taskCreatedBy, userRole }) => {
 
   const fetchSteps = async () => {
     try {
-      const response = await stepsAPI.getTaskSteps(taskId);
+      // Ensure taskId is a string, not an object
+      const taskIdString = typeof taskId === 'object' ? (taskId._id || taskId.id || taskId) : taskId;
+      const response = await stepsAPI.getTaskSteps(taskIdString);
       setSteps(response.data.data);
     } catch (error) {
       console.error('Error fetching steps:', error);
@@ -64,27 +66,31 @@ const StepList = ({ taskId, taskCreatedBy, userRole }) => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/users`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const data = await response.json();
-      if (data.success) {
-        setUsers(data.data);
-      }
+      const response = await usersAPI.getUsers();
+      console.log('Users API Response (StepList):', response.data);
+      const usersList = response.data?.data || response.data || [];
+      console.log('Users list (StepList):', usersList);
+      setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
   const handleOpenModal = (step = null) => {
     if (step) {
       setEditingStep(step);
+      // Map assignedUsers to IDs, handling both object and ID formats
+      const assignedUserIds = (step.assignedUsers || []).map((u) => {
+        if (typeof u === 'object' && u._id) {
+          return u._id.toString();
+        }
+        return u.toString();
+      });
       setFormData({
         title: step.title || '',
         description: step.description || '',
-        assignedUsers: step.assignedUsers?.map((u) => u._id || u) || [],
+        assignedUsers: assignedUserIds,
         startDate: step.startDate ? dayjs(step.startDate).format('YYYY-MM-DD') : '',
         endDate: step.endDate ? dayjs(step.endDate).format('YYYY-MM-DD') : '',
       });
@@ -116,15 +122,11 @@ const StepList = ({ taskId, taskCreatedBy, userRole }) => {
   const handleSubmit = async () => {
     try {
       if (editingStep) {
-        await stepsAPI.updateStep(editingStep._id, {
-          ...formData,
-          taskId,
-        });
+        await stepsAPI.updateStep(editingStep._id, formData);
       } else {
-        await stepsAPI.createStep({
-          ...formData,
-          taskId,
-        });
+        // Ensure taskId is a string, not an object
+        const taskIdString = typeof taskId === 'object' ? (taskId._id || taskId.id || taskId) : taskId;
+        await stepsAPI.createStep(taskIdString, formData);
       }
       fetchSteps();
       handleCloseModal();
