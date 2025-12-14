@@ -9,13 +9,15 @@ import {
   Button,
   Typography,
   Alert,
+  Divider,
 } from '@mui/material';
+import GoogleIcon from '@mui/icons-material/Google';
 import useAuthStore from '../store/authStore';
 import useThemeStore from '../store/themeStore';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, sendOTP, loading, error, isAuthenticated } = useAuthStore();
+  const { login, sendOTP, loading, error, isAuthenticated, initiateOAuth } = useAuthStore();
   const { mode } = useThemeStore();
   const [formData, setFormData] = useState({
     email: '',
@@ -80,6 +82,10 @@ const Login = () => {
     await handleSendOTP({ preventDefault: () => {} });
   };
 
+  const handleOAuthLogin = async (provider) => {
+    await initiateOAuth(provider);
+  };
+
   return (
     <Box
       sx={{
@@ -123,6 +129,37 @@ const Login = () => {
                 {otpMessage}
               </Alert>
             )}
+
+            {/* OAuth Buttons */}
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<GoogleIcon />}
+              onClick={() => handleOAuthLogin('google')}
+              disabled={loading}
+              sx={{
+                mb: 3,
+                py: 1.5,
+                fontSize: '1.0625rem',
+                fontWeight: 400,
+                borderRadius: 0,
+                borderColor: 'divider',
+                textTransform: 'none',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                },
+              }}
+            >
+              Continue with Google
+            </Button>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Divider sx={{ flex: 1 }} />
+              <Typography variant="body2" sx={{ px: 2, color: 'text.secondary' }}>
+                OR
+              </Typography>
+              <Divider sx={{ flex: 1 }} />
+            </Box>
 
             <Box component="form" onSubmit={handleSubmit}>
               <TextField

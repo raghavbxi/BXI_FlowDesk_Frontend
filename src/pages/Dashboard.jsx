@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box,
   Container,
@@ -12,8 +12,13 @@ import {
   Fab,
   CircularProgress,
   Alert,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import dayjs from 'dayjs';
 import TaskCard from '../components/TaskCard';
 import CreateTaskModal from '../components/CreateTaskModal';
 import useTaskStore from '../store/taskStore';
@@ -60,42 +65,75 @@ const Dashboard = () => {
   const overdueTasks = allTasks.filter((task) => task.overdue);
   const upcomingTasks = allTasks.filter((task) => !task.overdue && task.status !== 'completed');
 
-  const filteredTasks = tasks.filter((task) => {
-    // Apply stat filter first
-    if (activeStatFilter === 'today') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const endDate = new Date(task.endDate);
-      endDate.setHours(0, 0, 0, 0);
-      if (endDate.getTime() !== today.getTime()) {
-        return false;
+  const filteredTasks = useMemo(() => {
+    // First, filter tasks
+    let filtered = tasks.filter((task) => {
+      // Apply stat filter first
+      if (activeStatFilter === 'today') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const endDate = new Date(task.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        if (endDate.getTime() !== today.getTime()) {
+          return false;
+        }
+      } else if (activeStatFilter === 'overdue') {
+        if (!task.overdue) {
+          return false;
+        }
+      } else if (activeStatFilter === 'upcoming') {
+        if (task.overdue || task.status === 'completed') {
+          return false;
+        }
       }
-    } else if (activeStatFilter === 'overdue') {
-      if (!task.overdue) {
-        return false;
-      }
-    } else if (activeStatFilter === 'upcoming') {
-      if (task.overdue || task.status === 'completed') {
-        return false;
-      }
-    }
-    // activeStatFilter === 'all' or null shows all tasks
+      // activeStatFilter === 'all' or null shows all tasks
 
-    if (filters.status !== 'all' && task.status !== filters.status) {
-      return false;
-    }
-    if (filters.priority && filters.priority !== 'all' && task.priority !== filters.priority) {
-      return false;
-    }
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      return (
-        task.title.toLowerCase().includes(searchLower) ||
-        task.description?.toLowerCase().includes(searchLower)
-      );
-    }
-    return true;
-  });
+      if (filters.status !== 'all' && task.status !== filters.status) {
+        return false;
+      }
+      if (filters.priority && filters.priority !== 'all' && task.priority !== filters.priority) {
+        return false;
+      }
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        return (
+          task.title.toLowerCase().includes(searchLower) ||
+          task.description?.toLowerCase().includes(searchLower)
+        );
+      }
+      return true;
+    });
+
+    // Then, sort tasks
+    const sortBy = filters.sortBy || 'createdAt';
+    const sortOrder = filters.sortOrder || 'asc';
+
+    filtered.sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case 'endDate':
+          comparison = dayjs(a.endDate).valueOf() - dayjs(b.endDate).valueOf();
+          break;
+        case 'createdAt':
+          comparison = dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf();
+          break;
+        case 'title':
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
+        case 'priority':
+          const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+          comparison = (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
+          break;
+        default:
+          comparison = 0;
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [tasks, filters, activeStatFilter]);
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default', pb: 8 }}>
@@ -156,7 +194,7 @@ const Dashboard = () => {
           <FormControl sx={{ minWidth: { xs: '100%', sm: 150 }, flex: { xs: '1 1 100%', sm: '0 0 auto' } }} size="small">
             <InputLabel>Sort By</InputLabel>
             <Select
-              value={filters.sortBy}
+              value={filters.sortBy || 'createdAt'}
               label="Sort By"
               onChange={(e) => handleFilterChange('sortBy', e.target.value)}
             >
@@ -166,6 +204,21 @@ const Dashboard = () => {
               <MenuItem value="priority">Priority</MenuItem>
             </Select>
           </FormControl>
+          <Tooltip title={(filters.sortOrder || 'asc') === 'asc' ? 'Ascending' : 'Descending'}>
+            <IconButton
+              onClick={() => handleFilterChange('sortOrder', (filters.sortOrder || 'asc') === 'asc' ? 'desc' : 'asc')}
+              size="small"
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 0,
+                minWidth: 40,
+                height: 40,
+              }}
+            >
+              {(filters.sortOrder || 'asc') === 'asc' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+            </IconButton>
+          </Tooltip>
         </Box>
 
         {error && (

@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import TaskDetails from './pages/TaskDetails';
 import Calendar from './pages/Calendar';
+import OAuthCallback from './pages/OAuthCallback';
 import useAuthStore from './store/authStore';
 
 const PrivateRoute = ({ children }) => {
@@ -38,6 +39,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth/oauth/callback" element={<OAuthCallback />} />
         <Route
           path="/dashboard"
           element={

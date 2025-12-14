@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_URL = "https://bxi-flowdesk-backend.onrender.com/api";
+// const API_URL = "http://localhost:3000/api"; // For local development
 
 // Create axios instance
 const api = axios.create({
@@ -43,6 +44,10 @@ export const authAPI = {
   login: (data) => api.post("/auth/login", data),
   sendOTP: (email) => api.post("/auth/send-otp", { email }),
   getMe: () => api.get("/auth/me"),
+  // OAuth endpoints
+  getOAuthUrl: (provider) => api.get(`/auth/oauth/${provider}`),
+  oauthCallback: (provider, code, state) => api.get(`/auth/oauth/${provider}/callback`, { params: { code, state } }),
+  oauthLogin: (provider, token) => api.post(`/auth/oauth/${provider}/login`, { token }),
 };
 
 // Tasks API

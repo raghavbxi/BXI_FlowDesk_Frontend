@@ -10,7 +10,7 @@ const useTaskStore = create((set, get) => ({
     status: 'all',
     search: '',
     sortBy: 'createdAt',
-    sortOrder: 'desc',
+    sortOrder: 'asc',
   },
 
   setFilters: (filters) => {
