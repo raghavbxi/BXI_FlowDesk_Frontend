@@ -14,18 +14,40 @@ import {
 import GoogleIcon from '@mui/icons-material/Google';
 import useAuthStore from '../store/authStore';
 import useThemeStore from '../store/themeStore';
+import { signInWithGoogle } from '../services/googleAuth';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register, loading, error, isAuthenticated, initiateOAuth } = useAuthStore();
+  const { register, googleLogin, loading, error, isAuthenticated } = useAuthStore();
   const { mode } = useThemeStore();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
   });
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  const handleOAuthLogin = async (provider) => {
-    await initiateOAuth(provider);
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      // Sign in with Google using Firebase
+      const result = await signInWithGoogle();
+      
+      if (!result.success) {
+        setGoogleLoading(false);
+        return;
+      }
+      
+      // Send ID token to backend
+      const loginResult = await googleLogin(result.idToken);
+      
+      if (loginResult.success) {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('[Register] Google login error:', error);
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -87,13 +109,13 @@ const Register = () => {
               </Alert>
             )}
 
-            {/* OAuth Buttons */}
+            {/* Google OAuth Button */}
             <Button
               fullWidth
               variant="outlined"
               startIcon={<GoogleIcon />}
-              onClick={() => handleOAuthLogin('google')}
-              disabled={loading}
+              onClick={handleGoogleLogin}
+              disabled={loading || googleLoading}
               sx={{
                 mb: 3,
                 py: 1.5,
@@ -107,7 +129,7 @@ const Register = () => {
                 },
               }}
             >
-              Continue with Google
+              {googleLoading ? 'Signing in with Google...' : 'Continue with Google'}
             </Button>
 
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>

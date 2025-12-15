@@ -111,26 +111,11 @@ const useAuthStore = create(
         set({ user: { ...useAuthStore.getState().user, ...userData } });
       },
 
-      // OAuth methods
-      initiateOAuth: async (provider) => {
+      // Google OAuth with Firebase
+      googleLogin: async (idToken) => {
         set({ loading: true, error: null });
         try {
-          const response = await authAPI.getOAuthUrl(provider);
-          const { url } = response.data;
-          // Redirect to OAuth provider
-          window.location.href = url;
-          return { success: true };
-        } catch (error) {
-          const message = error.response?.data?.message || `Failed to initiate ${provider} OAuth`;
-          set({ loading: false, error: message });
-          return { success: false, error: message };
-        }
-      },
-
-      handleOAuthCallback: async (provider, code, state) => {
-        set({ loading: true, error: null });
-        try {
-          const response = await authAPI.oauthCallback(provider, code, state);
+          const response = await authAPI.googleOAuth({ idToken });
           const { token, user } = response.data;
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(user));
@@ -143,29 +128,7 @@ const useAuthStore = create(
           });
           return { success: true };
         } catch (error) {
-          const message = error.response?.data?.message || 'OAuth authentication failed';
-          set({ loading: false, error: message, isAuthenticated: false });
-          return { success: false, error: message };
-        }
-      },
-
-      oauthLogin: async (provider, token) => {
-        set({ loading: true, error: null });
-        try {
-          const response = await authAPI.oauthLogin(provider, token);
-          const { token: authToken, user } = response.data;
-          localStorage.setItem('token', authToken);
-          localStorage.setItem('user', JSON.stringify(user));
-          set({
-            user,
-            token: authToken,
-            isAuthenticated: true,
-            loading: false,
-            error: null,
-          });
-          return { success: true };
-        } catch (error) {
-          const message = error.response?.data?.message || `${provider} login failed`;
+          const message = error.response?.data?.message || 'Google login failed';
           set({ loading: false, error: message, isAuthenticated: false });
           return { success: false, error: message };
         }

@@ -44,10 +44,8 @@ export const authAPI = {
   login: (data) => api.post("/auth/login", data),
   sendOTP: (email) => api.post("/auth/send-otp", { email }),
   getMe: () => api.get("/auth/me"),
-  // OAuth endpoints
-  getOAuthUrl: (provider) => api.get(`/auth/oauth/${provider}`),
-  oauthCallback: (provider, code, state) => api.get(`/auth/oauth/${provider}/callback`, { params: { code, state } }),
-  oauthLogin: (provider, token) => api.post(`/auth/oauth/${provider}/login`, { token }),
+  // Google OAuth with Firebase
+  googleOAuth: (data) => api.post("/auth/oauth/google", data),
 };
 
 // Tasks API
